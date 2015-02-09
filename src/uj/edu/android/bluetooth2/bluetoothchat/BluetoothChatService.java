@@ -316,10 +316,12 @@ public class BluetoothChatService {
 
             br.close();
 
-            String content = Base64.encodeToString(sb.toString().getBytes(), Base64.DEFAULT);
-            String res = String.format("DESTINATION:%s;TYPE:FILE;%s", address, content);
+            String msg = ChatProtocol.createFileMessage(sb.toString().getBytes(), f.getName(), address, mAdapter.getAddress(), mAdapter.getName());
 
-            write(res.getBytes());
+//            String content = Base64.encodeToString(sb.toString().getBytes(), Base64.DEFAULT);
+//            String res = String.format("DESTINATION:%s;TYPE:FILE;%s", address, content);
+
+            write(msg.getBytes());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -353,6 +355,12 @@ public class BluetoothChatService {
 
         // Start the service over to restart listening mode
         BluetoothChatService.this.start();
+    }
+
+    public void disconnect() {
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+        }
     }
 
     /**

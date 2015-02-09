@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class ChatProtocol {
     public static ChatMessage parseMessage(String message) {
         ChatMessage result = new ChatMessage();
-        Pattern r = Pattern.compile("ROUTE:(([a-zA-Z0-9\\-,]+)|([*]));TYPE:(TEXT|FILE|GRAPH);(FILE:(\\w+))?FROM_ADDR:(.+);FROM_NAME:([a-zA-Z0-9\\-]+);");
+        Pattern r = Pattern.compile("^ROUTE:(([a-zA-Z0-9\\-,]+)|([*]));TYPE:(TEXT|FILE|GRAPH);(FILE:(.+);)?FROM_ADDR:(.+);FROM_NAME:([a-zA-Z0-9\\-]+);(.*)");
         Matcher m = r.matcher(message);
 
         if (!m.find()) {
@@ -27,7 +27,7 @@ public class ChatProtocol {
         result.setSenderName(m.group(8));
 
         if (result.isFile()) {
-            result.setFileName(m.group(5));
+            result.setFileName(m.group(6));
             result.setContent(m.group(9));
         } else if (result.isGraph()) {
             result.setGraph(parseGraph(m.group(9)));

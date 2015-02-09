@@ -37,8 +37,10 @@ import android.widget.*;
 import uj.edu.android.bluetooth2.common.logger.Log;
 import uj.edu.android.bluetooth2.R;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -446,6 +448,9 @@ public class BluetoothChatFragment extends Fragment {
                 ensureDiscoverable();
                 return true;
             }
+            case R.id.disconnect: {
+                disconnect();
+            }
             case R.id.send_file: {
                 // Ensure this device is discoverable by others
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -463,6 +468,10 @@ public class BluetoothChatFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    private void disconnect() {
+        mChatService.disconnect();
     }
 
     private void handleOutcome(String messageStr) {
@@ -508,9 +517,14 @@ public class BluetoothChatFragment extends Fragment {
                 dir.mkdirs();
                 File file = new File(dir, message.getFileName());
 
+                if (!file.exists())
+                    file.createNewFile();
+
                 FileOutputStream f = new FileOutputStream(file);
-                f.write(message.getFileContent());
-                f.close();
+                DataOutputStream writer = new DataOutputStream(f);
+                writer.write( message.getFileContent());
+                writer.flush();
+                writer.close();
 
                 mConversationArrayAdapter.add(String.format("File saved to %s", file.getPath()));
             }
