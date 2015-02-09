@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
@@ -37,6 +38,7 @@ import uj.edu.android.bluetooth2.common.logger.Log;
 import uj.edu.android.bluetooth2.R;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -463,25 +465,20 @@ public class BluetoothChatFragment extends Fragment {
         return false;
     }
 
-    private void handleOutcome(String message) {
-        if (message.length() < 1)
+    private void handleOutcome(String messageStr) {
+        if (messageStr.length() < 1)
             return;
 
-        Map<String, String> parts = ChatProtocol.parseMessage(message);
+        ChatMessage message = ChatProtocol.parseMessage(messageStr);
 
-        List<String> route = ChatProtocol.parseRoute(parts.get("route"));
-        String destination = route.get(route.size() - 1);
-
-        String messageType = parts.get("messageType");
-
-        if (messageType.compareTo("TEXT") == 0) {
-            String content = parts.get("content");
+        if (message.isText()) {
+            String content = message.getContent();
 
             // Toast.makeText(getActivity(), String.format("T<%s> to <%s>: %s", parts.get("messageType"), destination, parts.get("content")), Toast.LENGTH_LONG).show();
 
-            mConversationArrayAdapter.add("Me:  " + content);
-        } else {
-            mConversationArrayAdapter.add(String.format("Me sent %s", messageType));
+            mConversationArrayAdapter.add("Me: " + content);
+        } else if (message.isFile()) {
+            mConversationArrayAdapter.add(String.format("Sent file %s", message.getFileName()));
         }
     }
 
@@ -490,25 +487,32 @@ public class BluetoothChatFragment extends Fragment {
             return;
 
         try {
-            String message = new String(buffer, 0, bytes);
+            String messageStr = new String(buffer, 0, bytes);
 
-            Map<String, String> parts = ChatProtocol.parseMessage(message);
-            List<String> route = ChatProtocol.parseRoute(parts.get("route"));
+            ChatMessage message = ChatProtocol.parseMessage(messageStr);
+            List<String> route = message.getRoute();
 
             String destination = route.get(route.size() - 1);
-            String messageType = parts.get("messageType");
-            String senderName = parts.get("senderName");
 
-            if (messageType.compareTo("TEXT") == 0) {
-                String content = parts.get("content");
+            if (message.isText()) {
+                String content = message.getContent();
 
                 // String myAddress = mBluetoothAdapter.getAddress();
 
                 // Toast.makeText(getActivity(), String.format("T<%s> to <%s>: %s", messageType, destination, content), Toast.LENGTH_LONG).show();
 
-                mConversationArrayAdapter.add(String.format("%s: %s", senderName, content));
-            } else {
-                mConversationArrayAdapter.add(String.format("Received %s from %s", messageType, senderName));
+                mConversationArrayAdapter.add(String.format("%s: %s", message.getSenderName(), content));
+            } else if (message.isFile()) {
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File (sdCard.getAbsolutePath() + "/bluetooth2/received_files");
+                dir.mkdirs();
+                File file = new File(dir, message.getFileName());
+
+                FileOutputStream f = new FileOutputStream(file);
+                f.write(message.getFileContent());
+                f.close();
+
+                mConversationArrayAdapter.add(String.format("File saved to %s", file.getPath()));
             }
         } catch (Exception ex) {
             Toast.makeText(getActivity(), String.format("%s::%s", ex.getClass().getName(), ex.getStackTrace()[0].toString()), Toast.LENGTH_LONG).show();

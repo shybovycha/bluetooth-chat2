@@ -136,4 +136,12 @@ public class ChatMessage {
     public Map<String, List<String>> getGraph() {
         return this.graph;
     }
+
+    public String getDestination() {
+        if (this.route.size() > 0) {
+            return this.route.get(this.route.size() - 1);
+        } else {
+            return "unknown";
+        }
+    }
 }
