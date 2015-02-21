@@ -5,5 +5,5 @@ package uj.edu.android.bluetooth2.sockets;
  */
 public interface IServerSocket extends ISocket {
     public void listen();
-    public ISocket accept();
+    public IClientSocket accept();
 }

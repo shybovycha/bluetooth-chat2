@@ -8,7 +8,7 @@ import java.io.OutputStream;
  * Created by shybovycha on 13.02.15.
  */
 public interface ISocket {
-    public void close() throws IOException;
+    public void close();
     public String getAddress();
     public String getName();
 }

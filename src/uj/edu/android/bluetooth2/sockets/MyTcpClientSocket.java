@@ -18,6 +18,10 @@ public class MyTcpClientSocket implements ITcpSocket, IClientSocket {
 
     private static final String TAG = "BluetoothConnection";
 
+    public MyTcpClientSocket() {
+        mClientSocket = null;
+    }
+
     public MyTcpClientSocket(Socket socket) {
         mClientSocket = socket;
     }
