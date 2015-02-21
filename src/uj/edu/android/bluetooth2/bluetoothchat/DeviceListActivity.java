@@ -90,6 +90,7 @@ public class DeviceListActivity extends Activity {
         ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
         pairedListView.setAdapter(pairedDevicesArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
+        pairedDevicesArrayAdapter.add("Server\n192.168.2.237:5432");
 
         // Find and set up the ListView for newly discovered devices
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
@@ -166,9 +167,10 @@ public class DeviceListActivity extends Activity {
             // Cancel discovery because it's costly and we're about to connect
             mBtAdapter.cancelDiscovery();
 
-            // Get the device MAC address, which is the last 17 chars in the View
+            // Get the device address, which is the last string in the View after \n
             String info = ((TextView) v).getText().toString();
-            String address = info.substring(info.length() - 17);
+            String[] parts = info.split("\n");
+            String address = parts[parts.length - 1];
 
             // Create the result Intent and include the MAC address
             Intent intent = new Intent();

@@ -67,7 +67,7 @@ public class MyTcpClientSocket implements ITcpSocket, IClientSocket {
         if (mClientSocket == null)
             return null;
 
-        return mClientSocket.getInetAddress().toString();
+        return mClientSocket.getRemoteSocketAddress().toString().replaceAll("[^\\d\\.:]", "");
     }
 
     @Override
@@ -87,7 +87,7 @@ public class MyTcpClientSocket implements ITcpSocket, IClientSocket {
             throw new IOException("Wrong address to connect to. Expected: \"ip_address:port\"");
         }
 
-        InetAddress inetAddr = InetAddress.getByAddress(parts[0].getBytes());
+        InetAddress inetAddr = InetAddress.getByName(parts[0]);
         int port = Integer.parseInt(parts[1]);
 
         mClientSocket = new Socket(inetAddr, port);

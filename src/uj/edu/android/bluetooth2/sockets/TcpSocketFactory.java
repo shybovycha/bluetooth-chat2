@@ -13,8 +13,12 @@ public class TcpSocketFactory implements ISocketFactory {
 
         IServerSocket tmpSocket = createServerSocket();
 
+        tmpSocket.listen();
+
         mAddress = tmpSocket.getAddress();
         mName = tmpSocket.getName();
+
+        tmpSocket.close();
     }
 
     @Override

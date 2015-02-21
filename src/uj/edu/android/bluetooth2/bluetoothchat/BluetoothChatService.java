@@ -69,7 +69,8 @@ public class BluetoothChatService {
      */
     public BluetoothChatService(Context context, Handler handler) {
         // TODO: could be rewritten to any socket provider you want
-        mSocketFactory = new BluetoothSocketFactory(BluetoothAdapter.getDefaultAdapter());
+        // mSocketFactory = new BluetoothSocketFactory(BluetoothAdapter.getDefaultAdapter());
+        mSocketFactory = new TcpSocketFactory(5432);
 
         mState = STATE_NONE;
         mHandler = handler;
@@ -124,10 +125,6 @@ public class BluetoothChatService {
             mSecureAcceptThread = new AcceptThread(true);
             mSecureAcceptThread.start();
         }
-        if (mInsecureAcceptThread == null) {
-            mInsecureAcceptThread = new AcceptThread(false);
-            mInsecureAcceptThread.start();
-        }
     }
 
     /**
@@ -180,14 +177,10 @@ public class BluetoothChatService {
         }
 
         // Cancel the accept thread because we only want to connect to one device
-        if (mSecureAcceptThread != null) {
+        /*if (mSecureAcceptThread != null) {
             mSecureAcceptThread.cancel();
             mSecureAcceptThread = null;
-        }
-        if (mInsecureAcceptThread != null) {
-            mInsecureAcceptThread.cancel();
-            mInsecureAcceptThread = null;
-        }
+        }*/
 
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket, socketType);
@@ -369,11 +362,12 @@ public class BluetoothChatService {
         }
 
         public void run() {
-            Log.d(TAG, "Socket Type: " + mSocketType +
-                    "BEGIN mAcceptThread" + this);
+            Log.d(TAG, "Socket Type: " + mSocketType + "BEGIN mAcceptThread" + this);
             setName("AcceptThread" + mSocketType);
 
-            IClientSocket socket = null;
+            mmServerSocket.listen();
+
+            IClientSocket socket;
 
             // Listen to the server socket if we're not connected
             while (mState != STATE_CONNECTED) {
@@ -487,11 +481,13 @@ public class BluetoothChatService {
 
             String myAddress = mSocketFactory.getAddress();
 
-            if (!mGraph.containsKey(myAddress)) {
-                mGraph.put(myAddress, new ArrayList<String>());
-            }
+            if (myAddress != null) {
+                if (!mGraph.containsKey(myAddress)) {
+                    mGraph.put(myAddress, new ArrayList<String>());
+                }
 
-            mGraph.get(myAddress).add(socket.getAddress());
+                mGraph.get(myAddress).add(socket.getAddress());
+            }
         }
 
         public void run() {
@@ -528,6 +524,7 @@ public class BluetoothChatService {
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
+                mmOutStream.flush();
 
                 // Share the sent message back to the UI Activity
                 mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)

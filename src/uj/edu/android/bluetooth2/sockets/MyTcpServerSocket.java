@@ -4,6 +4,7 @@ import uj.edu.android.bluetooth2.common.logger.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.UUID;
 
 /**
@@ -14,8 +15,6 @@ public class MyTcpServerSocket implements ITcpSocket, IServerSocket {
     protected int mPort;
 
     private static final String TAG = "BluetoothConnection";
-    private static final String NAME_SECURE = "BluetoothChatSecure";
-    private static final UUID MY_UUID_SECURE = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
 
     public MyTcpServerSocket(int port) {
         mPort = port;
@@ -36,8 +35,13 @@ public class MyTcpServerSocket implements ITcpSocket, IServerSocket {
         IClientSocket socket = null;
 
         try {
-            socket = new MyTcpClientSocket(mServerSocket.accept());
-        } catch (IOException e) {
+            Socket tmp = mServerSocket.accept();
+
+            if (tmp == null)
+                return null;
+
+            socket = new MyTcpClientSocket(tmp);
+        } catch (Exception e) {
             Log.e(TAG, "Could not accept socket");
         }
 
@@ -61,7 +65,7 @@ public class MyTcpServerSocket implements ITcpSocket, IServerSocket {
         if (mServerSocket == null)
             return null;
 
-        return mServerSocket.getInetAddress().toString();
+        return mServerSocket.getLocalSocketAddress().toString().replaceAll("[^\\d\\.:]", "");
     }
 
     @Override
