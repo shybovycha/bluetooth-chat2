@@ -1,13 +1,8 @@
 package uj.edu.android.bluetooth2.sockets;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import uj.edu.android.bluetooth2.common.logger.Log;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.util.UUID;
 
@@ -37,8 +32,8 @@ public class MyTcpServerSocket implements ITcpSocket, IServerSocket {
     }
 
     @Override
-    public ISocket accept() {
-        ISocket socket = null;
+    public IClientSocket accept() {
+        IClientSocket socket = null;
 
         try {
             socket = new MyTcpClientSocket(mServerSocket.accept());

@@ -1,7 +1,6 @@
 package uj.edu.android.bluetooth2.sockets;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import uj.edu.android.bluetooth2.common.logger.Log;
 

@@ -19,7 +19,6 @@ package uj.edu.android.bluetooth2.bluetoothchat;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -34,15 +33,13 @@ import android.support.v4.app.FragmentActivity;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.widget.*;
-import uj.edu.android.bluetooth2.common.logger.Log;
 import uj.edu.android.bluetooth2.R;
+import uj.edu.android.bluetooth2.common.logger.Log;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This fragment controls Bluetooth to communicate with other devices.
@@ -414,12 +411,11 @@ public class BluetoothChatFragment extends Fragment {
      */
     private void connectDevice(Intent data, boolean secure) {
         // Get the device MAC address
-        String address = data.getExtras()
-                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+        String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
         // Get the BluetoothDevice object
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        // BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
-        mChatService.connect(device, secure);
+        mChatService.connect(address, secure);
     }
 
     @Override

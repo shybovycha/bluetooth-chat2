@@ -17,19 +17,18 @@
 package uj.edu.android.bluetooth2.bluetoothchat;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Base64;
 import uj.edu.android.bluetooth2.common.logger.Log;
 import uj.edu.android.bluetooth2.sockets.*;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This class does all the work for setting up and managing Bluetooth
@@ -134,11 +133,11 @@ public class BluetoothChatService {
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
      *
-     * @param remoteSocket The socket to connect
+     * @param remoteAddress The socket to connect
      * @param secure Socket Security type - Secure (true) , Insecure (false)
      */
-    public synchronized void connect(ISocket remoteSocket, boolean secure) {
-        Log.d(TAG, "connect to: " + remoteSocket.getAddress());
+    public synchronized void connect(String remoteAddress, boolean secure) {
+        Log.d(TAG, "connect to: " + remoteAddress);
 
         // Cancel any thread attempting to make a connection
         if (mState == STATE_CONNECTING) {
@@ -155,7 +154,7 @@ public class BluetoothChatService {
         }
 
         // Start the thread to connect with the given device
-        mConnectThread = new ConnectThread(remoteSocket.getAddress(), secure);
+        mConnectThread = new ConnectThread(remoteAddress, secure);
         mConnectThread.start();
         setState(STATE_CONNECTING);
     }

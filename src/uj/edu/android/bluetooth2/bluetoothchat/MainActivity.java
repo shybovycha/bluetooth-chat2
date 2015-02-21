@@ -20,8 +20,8 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
-import uj.edu.android.bluetooth2.common.activities.SampleActivityBase;
 import uj.edu.android.bluetooth2.R;
+import uj.edu.android.bluetooth2.common.activities.SampleActivityBase;
 
 /**
  * A simple launcher activity containing a summary sample description, sample log and a custom

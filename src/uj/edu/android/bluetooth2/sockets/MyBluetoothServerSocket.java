@@ -38,8 +38,8 @@ public class MyBluetoothServerSocket implements IBluetoothSocket, IServerSocket 
     }
 
     @Override
-    public ISocket accept() {
-        ISocket socket = null;
+    public IClientSocket accept() {
+        IClientSocket socket = null;
 
         try {
             socket = new MyBluetoothClientSocket(mAdapter, mServerSocket.accept());

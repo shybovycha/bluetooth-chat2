@@ -1,6 +1,5 @@
 package uj.edu.android.bluetooth2.sockets;
 
-import android.bluetooth.BluetoothDevice;
 import uj.edu.android.bluetooth2.common.logger.Log;
 
 import java.io.IOException;
@@ -8,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.UUID;
 
 /**
  * Created by shybovycha on 13.02.15.

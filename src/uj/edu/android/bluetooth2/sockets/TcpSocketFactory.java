@@ -1,7 +1,5 @@
 package uj.edu.android.bluetooth2.sockets;
 
-import java.net.ServerSocket;
-
 /**
  * Created by shybovycha on 21.02.15.
  */
