@@ -42,6 +42,7 @@ import uj.edu.android.bluetooth2.sockets.TcpSocketFactory;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.List;
 
 /**
@@ -549,10 +550,9 @@ public class BluetoothChatFragment extends Fragment {
                 if (!file.exists())
                     file.createNewFile();
 
-                FileOutputStream f = new FileOutputStream(file);
-                DataOutputStream writer = new DataOutputStream(f);
-                writer.write( message.getFileContent());
-                writer.flush();
+                FileOutputStream writer = new FileOutputStream(file);
+                writer.write(message.getFileContent());
+                // writer.flush();
                 writer.close();
 
                 mConversationArrayAdapter.add(String.format("Saving file to %s", file.getPath()));
@@ -567,11 +567,14 @@ public class BluetoothChatFragment extends Fragment {
                     return;
                 }
 
-                FileOutputStream f = new FileOutputStream(file, true);
-                DataOutputStream writer = new DataOutputStream(f);
-                writer.write(message.getFileContent());
-                writer.flush();
-                writer.close();
+                FileOutputStream writer = new FileOutputStream(file, true);
+                // DataOutputStream oStream = new DataOutputStream(f);
+                try {
+                    writer.write(message.getFileContent());
+                    // writer.flush();
+                } finally {
+                    writer.close();
+                }
 
                 // mConversationArrayAdapter.add(String.format("File saved to %s", file.getPath()));
             }
