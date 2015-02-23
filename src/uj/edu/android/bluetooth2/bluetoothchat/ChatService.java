@@ -16,7 +16,6 @@
 
 package uj.edu.android.bluetooth2.bluetoothchat;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,9 +35,9 @@ import java.util.TreeMap;
  * incoming connections, a thread for connecting with a device, and a
  * thread for performing data transmissions when connected.
  */
-public class BluetoothChatService {
+public class ChatService implements Serializable {
     // Debugging
-    private static final String TAG = "BluetoothChatService";
+    private static final String TAG = "ChatService";
 
     // Member fields
     private final Handler mHandler;
@@ -67,10 +66,9 @@ public class BluetoothChatService {
      * @param context The UI Activity Context
      * @param handler A Handler to send messages back to the UI Activity
      */
-    public BluetoothChatService(Context context, Handler handler) {
+    public ChatService(Context context, Handler handler, ISocketFactory factory) {
         // TODO: could be rewritten to any socket provider you want
-        // mSocketFactory = new BluetoothSocketFactory(BluetoothAdapter.getDefaultAdapter());
-        mSocketFactory = new TcpSocketFactory(5432);
+        mSocketFactory = factory;
 
         mState = STATE_NONE;
         mHandler = handler;
@@ -300,9 +298,20 @@ public class BluetoothChatService {
 
             br.close();
 
-            String msg = ChatProtocol.createFileMessage(sb.toString().getBytes(), f.getName(), address, mSocketFactory.getAddress(), mSocketFactory.getName());
+            byte[] fileBytes = sb.toString().getBytes();
 
-            write(msg.getBytes());
+            String headerMessage = ChatProtocol.createFileMessage(fileBytes, f.getName(), address, mSocketFactory.getAddress(), mSocketFactory.getName());
+            write(headerMessage.getBytes());
+
+            int pieceSize = 512;
+
+            for (int pieceStart = 0; pieceStart < fileBytes.length; pieceStart += pieceSize) {
+                byte[] filePiece = new byte[pieceSize];
+                System.arraycopy(fileBytes, pieceStart, filePiece, 0, pieceSize);
+                String msg = ChatProtocol.createFilePieceMessage(filePiece, f.getName(), address, mSocketFactory.getAddress(), mSocketFactory.getName());
+
+                write(msg.getBytes());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -320,7 +329,7 @@ public class BluetoothChatService {
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        ChatService.this.start();
     }
 
     /**
@@ -335,7 +344,7 @@ public class BluetoothChatService {
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        ChatService.this.start();
     }
 
     public void disconnect() {
@@ -375,7 +384,7 @@ public class BluetoothChatService {
 
                 // If a connection was accepted
                 if (socket != null) {
-                    synchronized (BluetoothChatService.this) {
+                    synchronized (ChatService.this) {
                         switch (mState) {
                             case STATE_LISTEN:
                             case STATE_CONNECTING:
@@ -438,7 +447,7 @@ public class BluetoothChatService {
             }
 
             // Reset the ConnectThread because we're done
-            synchronized (BluetoothChatService.this) {
+            synchronized (ChatService.this) {
                 mConnectThread = null;
             }
 
@@ -510,7 +519,7 @@ public class BluetoothChatService {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
                     // Start the service over to restart listening mode
-                    BluetoothChatService.this.start();
+                    ChatService.this.start();
                     break;
                 }
             }

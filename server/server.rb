@@ -14,11 +14,12 @@ loop do
 
 		loop do
 			begin
-				data, addr = client.recvfrom(1024)
+				# data, addr = client.recvfrom(1024)
+				data = client.read
 
 				next if data.strip.size < 1
 
-				puts "#{addr}: #{data}"
+				puts ">>: #{data}"
 
 				clients.each do |c| 
 					next if c == client

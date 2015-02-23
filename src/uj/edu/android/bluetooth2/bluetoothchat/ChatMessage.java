@@ -78,6 +78,10 @@ public class ChatMessage {
         return type.compareTo("FILE") == 0;
     }
 
+    public boolean isFilePiece() {
+        return type.compareTo("FILE_PIECE") == 0;
+    }
+
     public boolean isText() {
         return type.compareTo("TEXT") == 0;
     }

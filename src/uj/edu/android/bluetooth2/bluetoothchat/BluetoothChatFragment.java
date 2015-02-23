@@ -35,6 +35,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 import uj.edu.android.bluetooth2.R;
 import uj.edu.android.bluetooth2.common.logger.Log;
+import uj.edu.android.bluetooth2.sockets.BluetoothSocketFactory;
+import uj.edu.android.bluetooth2.sockets.ISocketFactory;
+import uj.edu.android.bluetooth2.sockets.TcpSocketFactory;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -49,10 +52,14 @@ public class BluetoothChatFragment extends Fragment {
     private static final String TAG = "BluetoothChatFragment";
 
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 3;
     private static final int REQUEST_SELECT_FILE = 4;
+
+    private static final int CHAT_OVER_BLUETOOTH = 16;
+    private static final int CHAT_OVER_WIFI = 17;
+
+    private static final String CHAT_SERVICE = "mChatService";
 
     // Layout Views
     private ListView mConversationView;
@@ -82,20 +89,33 @@ public class BluetoothChatFragment extends Fragment {
     /**
      * Member object for the chat services
      */
-    private BluetoothChatService mChatService = null;
+    private ChatService mChatService = null;
+
+//    @Override
+//    public void onSaveInstanceState(Bundle savedInstanceState) {
+//        savedInstanceState.putSerializable(CHAT_SERVICE, mChatService);
+//
+//        super.onSaveInstanceState(savedInstanceState);
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        if (savedInstanceState != null) {
+//            mChatService = (ChatService) savedInstanceState.getSerializable(CHAT_SERVICE);
+//        }
+
         setHasOptionsMenu(true);
+
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // If the adapter is null, then Bluetooth is not supported
         if (mBluetoothAdapter == null) {
             FragmentActivity activity = getActivity();
-            Toast.makeText(activity, "Bluetooth is not available", Toast.LENGTH_LONG).show();
-            activity.finish();
+            Toast.makeText(activity, "Bluetooth is not available. Trying to use WiFi", Toast.LENGTH_LONG).show();
+            // activity.finish();
         }
     }
 
@@ -110,7 +130,7 @@ public class BluetoothChatFragment extends Fragment {
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
             // Otherwise, setup the chat session
         } else if (mChatService == null) {
-            setupChat();
+            setupChat(CHAT_OVER_BLUETOOTH);
         }
     }
 
@@ -131,7 +151,7 @@ public class BluetoothChatFragment extends Fragment {
         // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
         if (mChatService != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
+            if (mChatService.getState() == ChatService.STATE_NONE) {
                 // Start the Bluetooth chat services
                 mChatService.start();
             }
@@ -154,7 +174,7 @@ public class BluetoothChatFragment extends Fragment {
     /**
      * Set up the UI and background operations for chat.
      */
-    private void setupChat() {
+    private void setupChat(int mode) {
         Log.d(TAG, "setupChat()");
 
         // Initialize the array adapter for the conversation thread
@@ -178,8 +198,15 @@ public class BluetoothChatFragment extends Fragment {
             }
         });
 
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        mChatService = new BluetoothChatService(getActivity(), mHandler);
+        ISocketFactory socketFactory = null;
+
+        if (mode == CHAT_OVER_BLUETOOTH) {
+            socketFactory = new BluetoothSocketFactory(BluetoothAdapter.getDefaultAdapter());
+        } else if (mode == CHAT_OVER_WIFI) {
+            socketFactory = new TcpSocketFactory(5432);
+        }
+
+        mChatService = new ChatService(getActivity(), mHandler, socketFactory);
 
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
@@ -199,7 +226,7 @@ public class BluetoothChatFragment extends Fragment {
 
     private void sendMessage(String message) {
         // Check that we're actually connected before trying anything
-        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+        if (mChatService.getState() != ChatService.STATE_CONNECTED) {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -221,13 +248,13 @@ public class BluetoothChatFragment extends Fragment {
 
     private void sendFile(String filePath) {
         // Check that we're actually connected before trying anything
-        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+        if (mChatService.getState() != ChatService.STATE_CONNECTED) {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Check that there's actually something to send
-            // Get the message bytes and tell the BluetoothChatService to write
+            // Get the message bytes and tell the ChatService to write
 //            byte[] send = message.getBytes();
         mChatService.sendFile(new File(filePath));
 
@@ -286,7 +313,7 @@ public class BluetoothChatFragment extends Fragment {
     }
 
     /**
-     * The Handler that gets information back from the BluetoothChatService
+     * The Handler that gets information back from the ChatService
      */
     private final Handler mHandler = new Handler() {
         @Override
@@ -295,15 +322,15 @@ public class BluetoothChatFragment extends Fragment {
             switch (msg.what) {
                 case Constants.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
-                        case BluetoothChatService.STATE_CONNECTED:
+                        case ChatService.STATE_CONNECTED:
                             setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
                             mConversationArrayAdapter.clear();
                             break;
-                        case BluetoothChatService.STATE_CONNECTING:
+                        case ChatService.STATE_CONNECTING:
                             setStatus(R.string.title_connecting);
                             break;
-                        case BluetoothChatService.STATE_LISTEN:
-                        case BluetoothChatService.STATE_NONE:
+                        case ChatService.STATE_LISTEN:
+                        case ChatService.STATE_NONE:
                             setStatus(R.string.title_not_connected);
                             break;
                     }
@@ -340,29 +367,24 @@ public class BluetoothChatFragment extends Fragment {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CONNECT_DEVICE_SECURE:
+            case REQUEST_CONNECT_DEVICE:
                 // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
                     connectDevice(data, true);
-                }
-                break;
-            case REQUEST_CONNECT_DEVICE_INSECURE:
-                // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
-                    connectDevice(data, false);
                 }
                 break;
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
                     // Bluetooth is now enabled, so set up a chat session
-                    setupChat();
+                    setupChat(CHAT_OVER_BLUETOOTH);
                 } else {
                     // User did not enable Bluetooth or an error occurred
-                    Log.d(TAG, "BT not enabled");
-                    Toast.makeText(getActivity(), R.string.bt_not_enabled_leaving,
+                    Log.d(TAG, "BT not enabled. Switching to WiFi.");
+                    Toast.makeText(getActivity(), "BT not enabled. Switching to WiFi.",
                             Toast.LENGTH_SHORT).show();
-                    getActivity().finish();
+                    // getActivity().finish();
+                    setupChat(CHAT_OVER_WIFI);
                 }
                 break;
             case REQUEST_SELECT_FILE:
@@ -427,16 +449,10 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.secure_connect_scan: {
+            case R.id.connect_scan: {
                 // Launch the DeviceListActivity to see devices and do scan
                 Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-                return true;
-            }
-            case R.id.insecure_connect_scan: {
-                // Launch the DeviceListActivity to see devices and do scan
-                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
+                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
                 return true;
             }
             case R.id.discoverable: {
@@ -497,7 +513,11 @@ public class BluetoothChatFragment extends Fragment {
             ChatMessage message = ChatProtocol.parseMessage(messageStr);
             List<String> route = message.getRoute();
 
-            String destination = route.get(route.size() - 1);
+            String destination = "*";
+
+            if (route != null) {
+                destination = route.get(route.size() - 1);
+            }
 
             if (message.isText()) {
                 String content = message.getContent();
@@ -522,7 +542,25 @@ public class BluetoothChatFragment extends Fragment {
                 writer.flush();
                 writer.close();
 
-                mConversationArrayAdapter.add(String.format("File saved to %s", file.getPath()));
+                mConversationArrayAdapter.add(String.format("Saving file to %s", file.getPath()));
+            } else if (message.isFilePiece()) {
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File (sdCard.getAbsolutePath() + "/bluetooth2/received_files");
+                dir.mkdirs();
+                File file = new File(dir, message.getFileName());
+
+                if (!file.exists()) {
+                    mConversationArrayAdapter.add(String.format("Could not save file %s", file.getPath()));
+                    return;
+                }
+
+                FileOutputStream f = new FileOutputStream(file, true);
+                DataOutputStream writer = new DataOutputStream(f);
+                writer.write( message.getFileContent());
+                writer.flush();
+                writer.close();
+
+                // mConversationArrayAdapter.add(String.format("File saved to %s", file.getPath()));
             }
         } catch (Exception ex) {
             Toast.makeText(getActivity(), String.format("%s::%s", ex.getClass().getName(), ex.getStackTrace()[0].toString()), Toast.LENGTH_LONG).show();

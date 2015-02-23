@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class ChatProtocol {
     public static ChatMessage parseMessage(String message) {
         ChatMessage result = new ChatMessage();
-        Pattern r = Pattern.compile("^ROUTE:(([a-zA-Z0-9\\-\\.:,]+)|([*]));TYPE:(TEXT|FILE|GRAPH);(FILE:(.+);)?FROM_ADDR:([a-zA-Z0-9\\.:\\-]+);FROM_NAME:(.+);(.*)");
+        Pattern r = Pattern.compile("^ROUTE:(([a-zA-Z0-9\\-\\.:,]+)|([*]));TYPE:(TEXT|FILE|FILE_PIECE|GRAPH);(FILE:(.+);)?FROM_ADDR:([a-zA-Z0-9\\.:\\-]+);FROM_NAME:(.+);(.*)");
         Matcher m = r.matcher(message);
 
         if (!m.find()) {
@@ -94,6 +94,10 @@ public class ChatProtocol {
 
     public static String createFileMessage(byte[] content, String fileName, String route, String fromAddress, String fromName) {
         return String.format("ROUTE:%s;TYPE:FILE;FILE:%s;FROM_ADDR:%s;FROM_NAME:%s;%s", route, fileName, fromAddress, fromName, Base64.encodeToString(content, Base64.DEFAULT));
+    }
+
+    public static String createFilePieceMessage(byte[] content, String fileName, String route, String fromAddress, String fromName) {
+        return String.format("ROUTE:%s;TYPE:FILE;FILE_PIECE:%s;FROM_ADDR:%s;FROM_NAME:%s;%s", route, fileName, fromAddress, fromName, Base64.encodeToString(content, Base64.DEFAULT));
     }
 
     public static String createGraphMessage(Map<String, List<String>> graph, String address, String fromAddress, String fromName) {
