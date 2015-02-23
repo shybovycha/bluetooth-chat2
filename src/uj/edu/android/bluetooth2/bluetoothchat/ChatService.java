@@ -303,7 +303,7 @@ public class ChatService implements Serializable {
             String headerMessage = ChatProtocol.createFileMessage(fileBytes, f.getName(), address, mSocketFactory.getAddress(), mSocketFactory.getName());
             write(headerMessage.getBytes());
 
-            int pieceSize = 100;
+            int pieceSize = 512;
 
             for (int pieceStart = 0; pieceStart < fileBytes.length; pieceStart += pieceSize) {
                 byte[] filePiece = new byte[pieceSize];

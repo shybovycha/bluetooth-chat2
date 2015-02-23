@@ -474,6 +474,7 @@ public class BluetoothChatFragment extends Fragment {
             }
             case R.id.disconnect: {
                 disconnect();
+                return true;
             }
             case R.id.send_file: {
                 // Ensure this device is discoverable by others

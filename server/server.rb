@@ -14,9 +14,13 @@ loop do
 
 		loop do
 			begin
-				data, addr = client.recvfrom(244)
+				data, addr = client.recvfrom(1024)
 
-				next if data.strip.size < 1 || !(data =~ /^ROUTE/)
+				next if data.strip.size < 1 
+
+				unless data =~ /^ROUTE/
+					next
+				end
 
 				puts ">> #{data}"
 
