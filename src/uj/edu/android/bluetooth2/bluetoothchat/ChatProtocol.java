@@ -26,7 +26,7 @@ public class ChatProtocol {
         result.setSenderAddress(m.group(7));
         result.setSenderName(m.group(8));
 
-        if (result.isFile()) {
+        if (result.isFile() || result.isFilePiece()) {
             result.setFileName(m.group(6));
             result.setContent(m.group(9));
         } else if (result.isGraph()) {
@@ -97,7 +97,7 @@ public class ChatProtocol {
     }
 
     public static String createFilePieceMessage(byte[] content, String fileName, String route, String fromAddress, String fromName) {
-        return String.format("ROUTE:%s;TYPE:FILE;FILE_PIECE:%s;FROM_ADDR:%s;FROM_NAME:%s;%s", route, fileName, fromAddress, fromName, Base64.encodeToString(content, Base64.DEFAULT));
+        return String.format("ROUTE:%s;TYPE:FILE_PIECE;FILE:%s;FROM_ADDR:%s;FROM_NAME:%s;%s", route, fileName, fromAddress, fromName, Base64.encodeToString(content, Base64.DEFAULT));
     }
 
     public static String createGraphMessage(Map<String, List<String>> graph, String address, String fromAddress, String fromName) {

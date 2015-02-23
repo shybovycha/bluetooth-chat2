@@ -59,7 +59,7 @@ public class BluetoothChatFragment extends Fragment {
     private static final int CHAT_OVER_BLUETOOTH = 16;
     private static final int CHAT_OVER_WIFI = 17;
 
-    private static final String CHAT_SERVICE = "mChatService";
+    private int mProtocol = 0;
 
     // Layout Views
     private ListView mConversationView;
@@ -91,20 +91,24 @@ public class BluetoothChatFragment extends Fragment {
      */
     private ChatService mChatService = null;
 
-//    @Override
-//    public void onSaveInstanceState(Bundle savedInstanceState) {
-//        savedInstanceState.putSerializable(CHAT_SERVICE, mChatService);
-//
-//        super.onSaveInstanceState(savedInstanceState);
-//    }
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putInt("PROTOCOL", mProtocol);
+        savedInstanceState.putString("CONNECT_TO", mConnectedDeviceName);
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        if (savedInstanceState != null) {
-//            mChatService = (ChatService) savedInstanceState.getSerializable(CHAT_SERVICE);
-//        }
+        if (savedInstanceState != null) {
+            mProtocol = savedInstanceState.getInt("PROTOCOL");
+            mConnectedDeviceName = savedInstanceState.getString("CONNECT_TO");
+            setupChat(mProtocol);
+            mChatService.connect(mConnectedDeviceName, true);
+        }
 
         setHasOptionsMenu(true);
 
@@ -123,14 +127,18 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
+
+        if (mChatService != null) {
+            return;
+        }
+
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
             // Otherwise, setup the chat session
         } else if (mChatService == null) {
-            setupChat(CHAT_OVER_BLUETOOTH);
+            mProtocol = CHAT_OVER_BLUETOOTH;
+            setupChat(mProtocol);
         }
     }
 
@@ -199,6 +207,8 @@ public class BluetoothChatFragment extends Fragment {
         });
 
         ISocketFactory socketFactory = null;
+
+        mProtocol = mode;
 
         if (mode == CHAT_OVER_BLUETOOTH) {
             socketFactory = new BluetoothSocketFactory(BluetoothAdapter.getDefaultAdapter());
@@ -377,6 +387,7 @@ public class BluetoothChatFragment extends Fragment {
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
                     // Bluetooth is now enabled, so set up a chat session
+                    mProtocol = CHAT_OVER_BLUETOOTH;
                     setupChat(CHAT_OVER_BLUETOOTH);
                 } else {
                     // User did not enable Bluetooth or an error occurred
@@ -384,6 +395,7 @@ public class BluetoothChatFragment extends Fragment {
                     Toast.makeText(getActivity(), "BT not enabled. Switching to WiFi.",
                             Toast.LENGTH_SHORT).show();
                     // getActivity().finish();
+                    mProtocol = CHAT_OVER_WIFI;
                     setupChat(CHAT_OVER_WIFI);
                 }
                 break;

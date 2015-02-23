@@ -14,12 +14,11 @@ loop do
 
 		loop do
 			begin
-				# data, addr = client.recvfrom(1024)
-				data = client.read
+				data, addr = client.recvfrom(244)
 
-				next if data.strip.size < 1
+				next if data.strip.size < 1 || !(data =~ /^ROUTE/)
 
-				puts ">>: #{data}"
+				puts ">> #{data}"
 
 				clients.each do |c| 
 					next if c == client

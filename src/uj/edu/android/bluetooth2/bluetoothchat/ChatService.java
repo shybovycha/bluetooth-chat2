@@ -187,7 +187,7 @@ public class ChatService implements Serializable {
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.DEVICE_NAME, socket.getName());
+        bundle.putString(Constants.DEVICE_NAME, socket.getAddress());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
@@ -303,7 +303,7 @@ public class ChatService implements Serializable {
             String headerMessage = ChatProtocol.createFileMessage(fileBytes, f.getName(), address, mSocketFactory.getAddress(), mSocketFactory.getName());
             write(headerMessage.getBytes());
 
-            int pieceSize = 512;
+            int pieceSize = 100;
 
             for (int pieceStart = 0; pieceStart < fileBytes.length; pieceStart += pieceSize) {
                 byte[] filePiece = new byte[pieceSize];
