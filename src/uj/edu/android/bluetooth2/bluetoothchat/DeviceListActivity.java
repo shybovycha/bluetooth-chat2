@@ -90,7 +90,8 @@ public class DeviceListActivity extends Activity {
         ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
         pairedListView.setAdapter(pairedDevicesArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
-        pairedDevicesArrayAdapter.add("Server\n192.168.2.237:5432");
+        pairedDevicesArrayAdapter.add("Home\n192.168.2.237:5432");
+        pairedDevicesArrayAdapter.add("UJ\n10.61.237.214:5432");
 
         // Find and set up the ListView for newly discovered devices
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);

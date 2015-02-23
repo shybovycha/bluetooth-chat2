@@ -568,7 +568,7 @@ public class BluetoothChatFragment extends Fragment {
 
                 FileOutputStream f = new FileOutputStream(file, true);
                 DataOutputStream writer = new DataOutputStream(f);
-                writer.write( message.getFileContent());
+                writer.write(message.getFileContent());
                 writer.flush();
                 writer.close();
 
